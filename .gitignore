@@ -1,0 +1,4 @@
+.env
+server/node_modules/
+server/bun.lock
+server/bun.lockb

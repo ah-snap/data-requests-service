@@ -1,0 +1,12 @@
+{
+  "name": "data-requests-server",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun --watch run src/index.ts"
+  },
+  "dependencies": {
+    "postgres": "^3.4.4"
+  }
+}
