@@ -43,6 +43,8 @@ export async function handleRequests(req: Request): Promise<Response> {
 }
 
 async function createRequest(req: Request): Promise<Response> {
+  console.log("Creating request with body:", req);
+
   let body: CreateRequestBody;
   try {
     body = await req.json();
