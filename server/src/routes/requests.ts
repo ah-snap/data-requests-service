@@ -61,7 +61,7 @@ async function createRequest(req: Request): Promise<Response> {
     }
     if (type === "Teams Trigger") {
         let truncatedData = data.replace("!request", "").trim();
-        
+
         if (truncatedData.toLowerCase().startsWith("showroomdemolicenses")) {
             truncatedData = truncatedData.replace(/showroomdemolicenses/gi, "").trim();
         }
@@ -72,7 +72,7 @@ async function createRequest(req: Request): Promise<Response> {
             RETURNING *
         `;
 
-        return Response.json(request, { status: 201 });
+        return Response.json({"type": "ShowroomDemoLicenses", "Parameters": truncatedData}, { status: 201 });
     } else {
         const [request] = await sql`
             INSERT INTO requests (type, data, requestor)
