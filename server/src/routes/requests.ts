@@ -5,6 +5,7 @@ const VALID_STATUSES = [
     "In Progress",
     "Complete",
     "Confirmed",
+    "Invalid",
     "Declined",
 ] as const;
 
@@ -38,6 +39,7 @@ export async function handleRequests(req: Request): Promise<Response> {
     if (req.method === "GET" && !id) return getRequests(req);
     if (req.method === "GET" && id) return getRequest(id);
     if (req.method === "PATCH" && id) return updateRequest(req, id);
+    if (req.method === "DELETE" && id) return deleteRequest(id);
 
     return Response.json({ error: "Not found" }, { status: 404 });
 }
@@ -145,4 +147,16 @@ async function updateRequest(req: Request, id: string): Promise<Response> {
     }
 
     return Response.json(updated);
+}
+
+async function deleteRequest(id: string): Promise<Response> {
+    const [deleted] = await sql`
+    DELETE FROM requests WHERE id = ${id} RETURNING id
+  `;
+
+    if (!deleted) {
+        return Response.json({ error: "Request not found" }, { status: 404 });
+    }
+
+    return new Response(null, { status: 204 });
 }
