@@ -72,7 +72,7 @@ async function createRequest(req: Request): Promise<Response> {
             RETURNING *
         `;
 
-        return Response.json({"request": request, "type": "ShowroomDemoLicenses", "Parameters": truncatedData}, { status: 201 });
+        return Response.json({"id": request.id, "type": "ShowroomDemoLicenses", "Parameters": truncatedData}, { status: 201 });
     } else {
         const [request] = await sql`
             INSERT INTO requests (type, data, requestor)
