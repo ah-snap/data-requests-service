@@ -68,7 +68,7 @@ async function createRequest(req: Request): Promise<Response> {
 
         const [request] = await sql`
             INSERT INTO requests (type, data, requestor)
-            VALUES (${type.trim()}, ${truncatedData}, ${requestor.trim()})
+            VALUES ('ShowroomDemoLicenses', ${truncatedData}, ${requestor.trim()})
             RETURNING *
         `;
 
