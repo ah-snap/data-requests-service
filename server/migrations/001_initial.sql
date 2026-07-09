@@ -1,10 +1,14 @@
-CREATE TYPE request_status AS ENUM (
-  'Pending',
-  'In Progress',
-  'Complete',
-  'Confirmed',
-  'Declined'
-);
+DO $$ BEGIN
+  CREATE TYPE request_status AS ENUM (
+    'Pending',
+    'In Progress',
+    'Complete',
+    'Confirmed',
+    'Declined'
+  );
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 CREATE TABLE IF NOT EXISTS requests (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -25,6 +29,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER set_updated_at
-  BEFORE UPDATE ON requests
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+DO $$ BEGIN
+  CREATE TRIGGER set_updated_at
+    BEFORE UPDATE ON requests
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
