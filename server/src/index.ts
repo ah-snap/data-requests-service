@@ -23,6 +23,7 @@ Bun.serve({
     // Bearer token auth for all other routes
     const auth = req.headers.get("Authorization");
     if (!auth || auth !== `Bearer ${API_KEY}`) {
+        console.log("Unauthorized request:", req);
       return Response.json({ error: "Unauthorized" }, { status: 401 });
     }
 
