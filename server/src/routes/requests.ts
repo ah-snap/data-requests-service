@@ -1,81 +1,96 @@
 import sql from "../db";
 
 const VALID_STATUSES = [
-  "Pending",
-  "In Progress",
-  "Complete",
-  "Confirmed",
-  "Declined",
+    "Pending",
+    "In Progress",
+    "Complete",
+    "Confirmed",
+    "Declined",
 ] as const;
 
 type RequestStatus = (typeof VALID_STATUSES)[number];
 
 interface CreateRequestBody {
-  type: string;
-  data: string;
-  requestor: string;
+    type: string;
+    data: string;
+    requestor: string;
 }
 
 interface UpdateRequestBody {
-  status: RequestStatus;
-  notes?: string;
+    status: RequestStatus;
+    notes?: string;
 }
 
 export async function handleRequests(req: Request): Promise<Response> {
-  const url = new URL(req.url);
-  const segments = url.pathname.replace(/^\/+/, "").split("/");
-  console.log("Request segments:", req.url, segments);
-  console.log("Request method:", req);
+    const url = new URL(req.url);
+    const segments = url.pathname.replace(/^\/+/, "").split("/");
+    console.log("Request segments:", req.url, segments);
+    console.log("Request method:", req);
 
 
-  if (segments[0] !== "requests") {
+    if (segments[0] !== "requests") {
+        return Response.json({ error: "Not found" }, { status: 404 });
+    }
+
+    const id = segments[1] ?? null;
+
+    if (req.method === "POST" && !id) return createRequest(req);
+    if (req.method === "GET" && !id) return getRequests(req);
+    if (req.method === "GET" && id) return getRequest(id);
+    if (req.method === "PATCH" && id) return updateRequest(req, id);
+
     return Response.json({ error: "Not found" }, { status: 404 });
-  }
-
-  const id = segments[1] ?? null;
-
-  if (req.method === "POST" && !id) return createRequest(req);
-  if (req.method === "GET" && !id) return getRequests(req);
-  if (req.method === "GET" && id) return getRequest(id);
-  if (req.method === "PATCH" && id) return updateRequest(req, id);
-
-  return Response.json({ error: "Not found" }, { status: 404 });
 }
 
 async function createRequest(req: Request): Promise<Response> {
-  console.log("Creating request with body:", req);
+    console.log("Creating request with body:", req);
 
-  let body: CreateRequestBody;
-  try {
-    body = await req.json();
-  } catch {
-    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
+    let body: CreateRequestBody;
+    try {
+        body = await req.json();
+    } catch {
+        return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
 
-  const { type, data, requestor } = body;
-  if (!type?.trim() || !data?.trim() || !requestor?.trim()) {
-    return Response.json(
-      { error: "type, data, and requestor are required" },
-      { status: 400 }
-    );
-  }
+    const { type, data, requestor } = body;
+    if (!type?.trim() || !data?.trim() || !requestor?.trim()) {
+        return Response.json(
+            { error: "type, data, and requestor are required" },
+            { status: 400 }
+        );
+    }
+    if (type === "Teams Trigger") {
+        let truncatedData = data.replace("!request", "").trim();
+        
+        if (truncatedData.toLowerCase().startsWith("showroomdemolicenses")) {
+            truncatedData = truncatedData.replace(/showroomdemolicenses/gi, "").trim();
+        }
 
-  const [request] = await sql`
-    INSERT INTO requests (type, data, requestor)
-    VALUES (${type.trim()}, ${data.trim()}, ${requestor.trim()})
-    RETURNING *
-  `;
+        const [request] = await sql`
+            INSERT INTO requests (type, data, requestor)
+            VALUES (${type.trim()}, ${truncatedData}, ${requestor.trim()})
+            RETURNING *
+        `;
 
-  return Response.json(request, { status: 201 });
+        return Response.json(request, { status: 201 });
+    } else {
+        const [request] = await sql`
+            INSERT INTO requests (type, data, requestor)
+            VALUES (${type.trim()}, ${data.trim()}, ${requestor.trim()})
+            RETURNING *
+        `;
+
+        return Response.json(request, { status: 201 });
+    }
 }
 
 async function getRequests(req: Request): Promise<Response> {
-  const url = new URL(req.url);
-  const status = url.searchParams.get("status");
-  const requestor = url.searchParams.get("requestor");
-  const type = url.searchParams.get("type");
+    const url = new URL(req.url);
+    const status = url.searchParams.get("status");
+    const requestor = url.searchParams.get("requestor");
+    const type = url.searchParams.get("type");
 
-  const requests = await sql`
+    const requests = await sql`
     SELECT * FROM requests
     WHERE TRUE
       ${status ? sql`AND status = ${status}::request_status` : sql``}
@@ -84,39 +99,39 @@ async function getRequests(req: Request): Promise<Response> {
     ORDER BY created_at DESC
   `;
 
-  return Response.json(requests);
+    return Response.json(requests);
 }
 
 async function getRequest(id: string): Promise<Response> {
-  const [request] = await sql`
+    const [request] = await sql`
     SELECT * FROM requests WHERE id = ${id}
   `;
 
-  if (!request) {
-    return Response.json({ error: "Request not found" }, { status: 404 });
-  }
+    if (!request) {
+        return Response.json({ error: "Request not found" }, { status: 404 });
+    }
 
-  return Response.json(request);
+    return Response.json(request);
 }
 
 async function updateRequest(req: Request, id: string): Promise<Response> {
-  let body: UpdateRequestBody;
-  try {
-    body = await req.json();
-  } catch {
-    return Response.json({ error: "Invalid JSON body" }, { status: 400 });
-  }
+    let body: UpdateRequestBody;
+    try {
+        body = await req.json();
+    } catch {
+        return Response.json({ error: "Invalid JSON body" }, { status: 400 });
+    }
 
-  const { status, notes } = body;
+    const { status, notes } = body;
 
-  if (!status || !(VALID_STATUSES as readonly string[]).includes(status)) {
-    return Response.json(
-      { error: `status must be one of: ${VALID_STATUSES.join(", ")}` },
-      { status: 400 }
-    );
-  }
+    if (!status || !(VALID_STATUSES as readonly string[]).includes(status)) {
+        return Response.json(
+            { error: `status must be one of: ${VALID_STATUSES.join(", ")}` },
+            { status: 400 }
+        );
+    }
 
-  const [updated] = await sql`
+    const [updated] = await sql`
     UPDATE requests
     SET
       status = ${status}::request_status
@@ -125,9 +140,9 @@ async function updateRequest(req: Request, id: string): Promise<Response> {
     RETURNING *
   `;
 
-  if (!updated) {
-    return Response.json({ error: "Request not found" }, { status: 404 });
-  }
+    if (!updated) {
+        return Response.json({ error: "Request not found" }, { status: 404 });
+    }
 
-  return Response.json(updated);
+    return Response.json(updated);
 }
