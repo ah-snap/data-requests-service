@@ -24,6 +24,9 @@ interface UpdateRequestBody {
 export async function handleRequests(req: Request): Promise<Response> {
   const url = new URL(req.url);
   const segments = url.pathname.replace(/^\/+/, "").split("/");
+  console.log("Request segments:", req.url, segments);
+  console.log("Request method:", req);
+
 
   if (segments[0] !== "requests") {
     return Response.json({ error: "Not found" }, { status: 404 });
