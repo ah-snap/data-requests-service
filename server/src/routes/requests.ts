@@ -49,7 +49,7 @@ async function createRequest(req: Request): Promise<Response> {
 
     let body: CreateRequestBody;
     try {
-        body = await req.json();
+        body = await req.json() as CreateRequestBody;
     } catch {
         return Response.json({ error: "Invalid JSON body" }, { status: 400 });
     }
@@ -119,7 +119,7 @@ async function getRequest(id: string): Promise<Response> {
 async function updateRequest(req: Request, id: string): Promise<Response> {
     let body: UpdateRequestBody;
     try {
-        body = await req.json();
+        body = await req.json() as UpdateRequestBody;
     } catch {
         return Response.json({ error: "Invalid JSON body" }, { status: 400 });
     }
